@@ -11,19 +11,19 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '꿈 내용을 입력해주세요.' }, { status: 400 });
     }
 
-    // 사용자가 요청한 대로 3.0부터 가능한 모든 버전과 변형을 전부 포함한 궁극의 리스트
+    // 404 에러 방지를 위해 'models/' 접두사를 포함한 안정적인 모델 리스트
     const modelsToTry = [
-      "gemini-3.0-flash", "gemini-3.0-pro",
-      "gemini-2.5-flash", "gemini-2.5-pro",
-      "gemini-2.0-flash", "gemini-2.0-pro-exp", "gemini-2.0-flash-exp", "gemini-2.0-flash-lite-preview-02-05", "gemini-2.0-flash-thinking-exp",
-      "gemini-1.5-flash", "gemini-1.5-flash-8b", "gemini-1.5-pro", "gemini-1.5-flash-latest", "gemini-1.5-pro-latest",
-      "gemini-1.0-pro", "gemini-pro"
+      "models/gemini-2.0-flash",
+      "models/gemini-1.5-flash",
+      "models/gemini-1.5-pro",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash"
     ];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`[API] ${modelName} 모델 스캔 중...`);
+        console.log(`[API Try] Attempting with: ${modelName}`);
         const model = genAI.getGenerativeModel({ model: modelName });
         
         const prompt = `

@@ -9,10 +9,9 @@ export default function SplineHero() {
   function onLoad(splineApp: any) {
     splineRef.current = splineApp;
     
-    // Spline 앱이 로드되면 모든 오브젝트를 순회하며 텍스트를 숨깁니다.
+    // 텍스트 숨김 처리
     const objects = splineApp.getAllObjects();
     objects.forEach((obj: any) => {
-      // 텍스트 관련 오브젝트는 무조건 숨김 (디자인 미니멀리즘을 위해)
       if (
         obj.type === 'Text' || 
         obj.name.toLowerCase().includes('text') || 
@@ -30,8 +29,10 @@ export default function SplineHero() {
       <Spline
         scene="https://prod.spline.design/jbvk5NDyYjzNdcvs/scene.splinecode" 
         onLoad={onLoad}
+        className="w-full h-full"
       />
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050508] pointer-events-none" />
+      {/* 하단 페이드 효과를 주어 입력창이 더 잘 보이게 함 */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-[#050508]/80 pointer-events-none" />
     </div>
   );
 }
