@@ -10,7 +10,7 @@ export default function Home() {
       </div>
 
       {/* 2. 로봇 하단: 입력창 및 결과창 섹션 (DreamForm) */}
-      <div className="w-full max-w-4xl relative z-10 -mt-10">
+      <div className="w-full max-w-4xl relative z-10">
         <DreamForm />
       </div>
     </main>
