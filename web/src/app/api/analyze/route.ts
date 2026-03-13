@@ -11,19 +11,18 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '꿈 내용을 입력해주세요.' }, { status: 400 });
     }
 
-    // 404 에러 방지를 위해 'models/' 접두사를 포함한 안정적인 모델 리스트
+    // 404 에러 방지를 위해 가장 표준적이고 호환성이 높은 모델 리스트 사용
     const modelsToTry = [
-      "models/gemini-2.0-flash",
-      "models/gemini-1.5-flash",
-      "models/gemini-1.5-pro",
+      "gemini-1.5-flash",
       "gemini-2.0-flash",
-      "gemini-1.5-flash"
+      "gemini-1.5-pro",
+      "gemini-pro"
     ];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`[API Try] Attempting with: ${modelName}`);
+        console.log(`[API Try] Attempting with standard model name: ${modelName}`);
         const model = genAI.getGenerativeModel({ model: modelName });
         
         const prompt = `

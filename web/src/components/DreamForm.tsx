@@ -71,7 +71,7 @@ export default function DreamForm() {
       {/* 1. 입력창 섹션 (화면 정중앙 정렬) */}
       <div 
         className="w-full max-w-xs px-6 transition-all duration-1000 flex justify-center"
-        style={{ marginTop: result ? '42px' : '72px' }}
+        style={{ marginTop: result ? '50px' : '80px' }}
       >
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
