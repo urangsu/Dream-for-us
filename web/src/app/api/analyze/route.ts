@@ -11,19 +11,20 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '꿈 내용을 입력해주세요.' }, { status: 400 });
     }
 
-    // 가장 성공률이 높은 모델들부터 순서대로 시도
+    // 성능이 뛰어난 최신 2.0 모델부터 안정적인 1.5 모델까지 순차적으로 시도
     const modelsToTry = [
-      "gemini-1.5-flash",
+      "gemini-2.0-flash",      // 최신 2.0 버전
+      "gemini-2.0-flash-exp",  // 2.0 실험판
+      "gemini-1.5-flash",      // 가장 안정적인 1.5 버전
       "gemini-1.5-flash-latest",
-      "gemini-1.5-pro",
-      "gemini-1.5-flash-001",
+      "gemini-1.5-pro",        // 고성능 1.5 버전
       "gemini-1.5-flash-002"
     ];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`[API] ${modelName} 모델로 연결을 시도합니다...`);
+        console.log(`[API] ${modelName} 모델로 연결을 시도 중입니다...`);
         const model = genAI.getGenerativeModel({ model: modelName });
         
         const prompt = `
