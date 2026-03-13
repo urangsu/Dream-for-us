@@ -2,18 +2,21 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertCircle, CheckCircle2, Wind, ArrowRight, Loader2 } from 'lucide-react';
+import { Sparkles, AlertCircle, CheckCircle2, Wind, ArrowRight, Loader2, Copy, X, Moon, Stars, RotateCcw, Share2 } from 'lucide-react';
 
 interface Result {
   meaning: string;
   caution: string;
   goodOmen: string;
+  luckyNumbers: number[];
 }
 
 export default function DreamForm() {
   const [dream, setDream] = useState('');
+  const [submittedDream, setSubmittedDream] = useState('');
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<Result | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
@@ -23,37 +26,57 @@ export default function DreamForm() {
     }
   }, [dream]);
 
+  const copyToClipboard = (text: string, msg: string = '복사되었습니다.') => {
+    navigator.clipboard.writeText(text);
+    alert(msg);
+  };
+
+  const handleCopyResult = () => {
+    if (!result) return;
+    const shareText = `🌙 Dream Oracle 해몽 결과\n\n[꿈의 기억]\n"${submittedDream}"\n\n✨ 해몽 (Insight)\n${result.meaning}\n\n⚠️ 주의 (Caution)\n${result.caution}\n\n💎 길조 (Omen)\n${result.goodOmen}\n\n🍀 행운의 숫자\n${result.luckyNumbers.join(', ')}`;
+    copyToClipboard(shareText, '해몽 전문이 복사되었습니다. 소중한 이들에게 공유해보세요.');
+  };
+
   const triggerSubmit = async () => {
     if (!dream.trim() || loading) return;
 
+    setSubmittedDream(dream);
     setLoading(true);
     setResult(null);
+    setErrorMessage(null);
 
     try {
       const response = await fetch('/api/analyze', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ dream }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        // 서버에서 보낸 에러 메시지를 구체적으로 알림
-        alert(`분석 실패: ${data.error || '알 수 없는 오류가 발생했습니다.'}`);
+        setErrorMessage(data.error || '알 수 없는 오류가 발생했습니다.');
         setLoading(false);
         return;
       }
 
-      setResult(data);
+      setTimeout(() => {
+        setResult(data);
+        setLoading(false);
+      }, 1000);
+
     } catch (error: any) {
-      console.error(error);
-      alert('연결에 실패했습니다. 인터넷 연결이나 서버 상태를 확인해 주세요.');
-    } finally {
+      setErrorMessage(`연결에 실패했습니다.\n[사유]\n${error.message}`);
       setLoading(false);
     }
+  };
+
+  const handleReset = () => {
+    setResult(null);
+    setDream('');
+    setSubmittedDream('');
+    setErrorMessage(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const onKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
@@ -64,44 +87,48 @@ export default function DreamForm() {
   };
 
   return (
-    <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-6">
-      <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 1.5, ease: [0.19, 1, 0.22, 1] }}
-        className="w-full max-w-sm mt-[55vh]" 
-      >
-        {!result ? (
-          <div className="space-y-4">
-            <div className="text-center">
-              <h1 className="text-sm md:text-base font-normal text-white/90 tracking-[0.4em] font-['Malgun_Gothic']">
-                당신의 꿈을 풀어드립니다
-              </h1>
-            </div>
+    <div className="relative z-10 flex flex-col items-center min-h-screen px-6 py-20 overflow-y-auto">
+      {/* 로봇의 머리 위(상단)로 배치하기 위해 mt를 대폭 줄임 */}
+      <div className="w-full max-w-sm flex flex-col gap-16 mt-[12vh]">
+        
+        {/* 1. 입력 섹션 */}
+        <motion.div
+          layout
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="space-y-6"
+        >
+          <div className="text-center space-y-2">
+            <h1 className="text-lg md:text-xl font-medium text-white tracking-[0.4em] font-['Malgun_Gothic']">
+              당신의 꿈을 풀어드립니다
+            </h1>
+            <p className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-light">Ethereal Dream Oracle</p>
+          </div>
 
-            <div className="relative glass-minimal flex flex-col bg-white/[0.01] backdrop-blur-3xl border border-white/5 rounded-2xl px-5 py-4 group hover:border-white/10 transition-all duration-1000 shadow-2xl overflow-hidden">
-              {loading && (
-                <motion.div 
-                  initial={{ x: '-100%' }}
-                  animate={{ x: '100%' }}
-                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
-                  className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-400/50 to-transparent"
-                />
-              )}
-
-              <textarea
-                ref={textareaRef}
-                value={dream}
-                onChange={(e) => setDream(e.target.value)}
-                onKeyDown={onKeyDown}
-                placeholder="어떤 꿈이었나요?"
-                rows={1}
-                className="w-full bg-transparent border-none text-white/90 placeholder-white/20 focus:outline-none focus:ring-0 text-sm py-1 font-light resize-none leading-relaxed overflow-hidden font-['Malgun_Gothic']"
-                style={{ minHeight: '1.5rem', maxHeight: '10rem' }}
-                disabled={loading}
+          <div className="relative glass-minimal flex flex-col bg-white/[0.04] backdrop-blur-[40px] border border-white/10 rounded-2xl px-6 py-5 group hover:border-white/20 transition-all duration-1000 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+            {loading && (
+              <motion.div 
+                initial={{ x: '-100%' }}
+                animate={{ x: '100%' }}
+                transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
+                className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-400/80 to-transparent"
               />
-              
-              <div className="flex items-center justify-between mt-2">
+            )}
+
+            <textarea
+              ref={textareaRef}
+              value={dream}
+              onChange={(e) => setDream(e.target.value)}
+              onKeyDown={onKeyDown}
+              placeholder="기억 너머의 이야기를 들려주세요..."
+              rows={1}
+              className="w-full bg-transparent border-none text-white/90 placeholder-white/20 focus:outline-none focus:ring-0 text-sm md:text-base py-3 font-normal resize-none leading-relaxed overflow-hidden font-['Malgun_Gothic']"
+              style={{ minHeight: '2rem', maxHeight: '15rem' }}
+              disabled={loading || !!result}
+            />
+            
+            {!result && (
+              <div className="flex items-center justify-between mt-4 pt-3 border-t border-white/10">
                 <div className="flex items-center gap-2">
                   <AnimatePresence>
                     {loading && (
@@ -109,10 +136,10 @@ export default function DreamForm() {
                         initial={{ opacity: 0, x: -5 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0 }}
-                        className="flex items-center gap-2 text-[10px] text-purple-300/40 tracking-widest font-['Malgun_Gothic']"
+                        className="flex items-center gap-2 text-[10px] text-purple-300 tracking-widest font-['Malgun_Gothic']"
                       >
                         <Loader2 className="w-3 h-3 animate-spin" />
-                        <span>무의식을 해석하는 중...</span>
+                        <span className="animate-pulse">해석 중...</span>
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -121,67 +148,140 @@ export default function DreamForm() {
                 <button
                   onClick={triggerSubmit}
                   disabled={loading || !dream.trim()}
-                  className="p-1.5 text-white/40 hover:text-white/90 transition-all duration-700 disabled:opacity-0"
+                  className="p-2 text-white/40 hover:text-white/100 transition-all duration-700 disabled:opacity-0"
                 >
-                  <div className="p-1">
-                    <ArrowRight className="w-5 h-5 opacity-40 hover:opacity-100" />
-                  </div>
+                  <ArrowRight className="w-5 h-5 opacity-70 group-hover:opacity-100 transition-opacity" />
                 </button>
               </div>
-            </div>
+            )}
           </div>
-        ) : (
-          <AnimatePresence>
+        </motion.div>
+
+        {/* 2. 결과 섹션 */}
+        <AnimatePresence mode="wait">
+          {result && (
             <motion.div
-              initial={{ opacity: 0, scale: 0.98, y: 15 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.98, y: 15 }}
-              className="space-y-6"
+              layout
+              initial={{ opacity: 0, y: 40, filter: 'blur(15px)' }}
+              animate={{ opacity: 1, y: 0, filter: 'blur(0px)' }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-12 pb-32"
             >
-              <div className="glass-minimal p-8 rounded-[3rem] border border-white/5 bg-black/60 backdrop-blur-[40px] space-y-8 shadow-2xl">
+              <div className="text-center px-8 relative opacity-60">
+                <p className="text-[11px] text-white/60 leading-relaxed font-['Malgun_Gothic'] italic font-light">
+                  "{submittedDream}"
+                </p>
+              </div>
+
+              <div className="glass-minimal p-10 rounded-[4rem] border border-white/10 bg-black/60 backdrop-blur-[60px] space-y-12 shadow-[0_0_100px_-20px_rgba(168,85,247,0.3)] relative group/card">
+                
                 <section className="space-y-5">
-                  <div className="flex items-center gap-2 text-purple-300/30 uppercase tracking-[0.5em] text-[8px] font-bold">
-                    <Wind className="w-3 h-3" />
-                    <span>Dream Insight</span>
+                  <div className="flex items-center gap-2 text-purple-300 uppercase tracking-[0.4em] text-[10px] font-bold">
+                    <Stars className="w-4 h-4" />
+                    <span>해몽 (Insight)</span>
                   </div>
-                  <p className="text-white/90 leading-relaxed font-light text-sm md:text-base font-['Malgun_Gothic']">
+                  <p className="text-white text-base md:text-lg leading-[1.8] font-normal font-['Malgun_Gothic']">
                     {result.meaning}
                   </p>
                 </section>
 
-                <div className="grid grid-cols-1 gap-6 pt-6 border-t border-white/5">
-                  <section className="space-y-3">
-                    <div className="flex items-center gap-2 text-amber-300/20 uppercase tracking-[0.4em] text-[8px]">
-                      <AlertCircle className="w-2.5 h-2.5" />
-                      <span>Caution</span>
+                <div className="grid grid-cols-1 gap-10 pt-10 border-t border-white/10">
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 text-amber-300/80 uppercase tracking-[0.3em] text-[9px] font-bold">
+                      <Moon className="w-3.5 h-3.5" />
+                      <span>주의 (Caution)</span>
                     </div>
-                    <p className="text-white/40 text-xs leading-relaxed font-light font-['Malgun_Gothic']">
+                    <p className="text-white/70 text-sm leading-relaxed font-normal font-['Malgun_Gothic']">
                       {result.caution}
                     </p>
                   </section>
 
-                  <section className="space-y-3">
-                    <div className="flex items-center gap-2 text-emerald-300/20 uppercase tracking-[0.4em] text-[8px]">
-                      <CheckCircle2 className="w-2.5 h-2.5" />
-                      <span>Omen</span>
+                  <section className="space-y-4">
+                    <div className="flex items-center gap-2 text-emerald-300/80 uppercase tracking-[0.3em] text-[9px] font-bold">
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>길조 (Omen)</span>
                     </div>
-                    <p className="text-white/40 text-xs leading-relaxed font-light font-['Malgun_Gothic']">
+                    <p className="text-white/70 text-sm leading-relaxed font-normal font-['Malgun_Gothic']">
                       {result.goodOmen}
                     </p>
                   </section>
                 </div>
 
-                <button
-                  onClick={() => setResult(null)}
-                  className="w-full pt-4 text-[7px] tracking-[1em] text-white/5 hover:text-white/30 uppercase transition-all duration-1000 font-['Malgun_Gothic']"
-                >
-                  Return
-                </button>
+                {/* 행운의 숫자 섹션 */}
+                <div className="pt-10 border-t border-white/10 text-center">
+                  <div className="flex items-center justify-center gap-2 text-[9px] tracking-[0.5em] text-white/30 uppercase mb-6 font-bold">
+                    🍀 Lucky Numbers
+                  </div>
+                  <div className="flex justify-between gap-2 px-2">
+                    {result.luckyNumbers.map((num, idx) => (
+                      <motion.div
+                        key={idx}
+                        initial={{ opacity: 0, scale: 0.5 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: 0.1 * idx }}
+                        className="w-10 h-10 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-sm font-medium text-white/90 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                      >
+                        {num}
+                      </motion.div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* 복사 및 재시작 버튼 */}
+                <div className="flex flex-col gap-4 pt-4">
+                  <button
+                    onClick={handleCopyResult}
+                    className="flex items-center justify-center gap-3 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] tracking-[0.2em] text-white/70 hover:text-white/100 transition-all duration-500 font-['Malgun_Gothic'] group"
+                  >
+                    <Share2 className="w-3.5 h-3.5" />
+                    결과 복사하기
+                  </button>
+                  <button
+                    onClick={handleReset}
+                    className="flex items-center justify-center gap-3 py-4 text-[9px] tracking-[0.5em] text-white/20 hover:text-white/50 uppercase transition-all duration-1000 font-['Malgun_Gothic']"
+                  >
+                    <RotateCcw className="w-3 h-3" />
+                    새로운 꿈 해석하기
+                  </button>
+                </div>
               </div>
             </motion.div>
-          </AnimatePresence>
-        )}
-      </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 에러 모달 */}
+        <AnimatePresence>
+          {errorMessage && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              className="p-8 glass-minimal bg-red-500/10 border-red-500/20 rounded-3xl space-y-6 shadow-2xl"
+            >
+              <div className="flex items-center justify-between border-b border-white/5 pb-4">
+                <div className="flex items-center gap-2 text-red-400 text-[10px] font-bold font-['Malgun_Gothic'] uppercase tracking-widest">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>별의 연결이 끊어졌습니다</span>
+                </div>
+                <button onClick={() => setErrorMessage(null)} className="text-white/20 hover:text-white/100 p-1">
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <p className="text-white/80 text-[11px] leading-relaxed font-mono select-all bg-black/40 p-4 rounded-xl border border-white/5">
+                {errorMessage}
+              </p>
+              <button
+                onClick={() => copyToClipboard(errorMessage, '에러 내용이 복사되었습니다.')}
+                className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/60 text-[10px] rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em] font-['Malgun_Gothic']"
+              >
+                <Copy className="w-3.5 h-3.5" />
+                Error Copy
+              </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 }
