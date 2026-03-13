@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, AlertCircle, CheckCircle2, Wind, ArrowRight, Loader2, Copy, X, Moon, Stars, RotateCcw, Share2 } from 'lucide-react';
+import { Sparkles, AlertCircle, CheckCircle2, Wind, ArrowRight, Loader2, Copy, X, Moon, Stars, RotateCcw } from 'lucide-react';
 
 interface Result {
   meaning: string;
@@ -28,13 +28,7 @@ export default function DreamForm() {
 
   const copyToClipboard = (text: string, msg: string = '복사되었습니다.') => {
     navigator.clipboard.writeText(text);
-    alert(msg);
-  };
-
-  const handleCopyResult = () => {
-    if (!result) return;
-    const shareText = `🌙 Dream Oracle 해몽 결과\n\n[꿈의 기억]\n"${submittedDream}"\n\n✨ 해몽 (Insight)\n${result.meaning}\n\n⚠️ 주의 (Caution)\n${result.caution}\n\n💎 길조 (Omen)\n${result.goodOmen}\n\n🍀 행운의 숫자\n${result.luckyNumbers.join(', ')}`;
-    copyToClipboard(shareText, '해몽 전문이 복사되었습니다. 소중한 이들에게 공유해보세요.');
+    if (msg) alert(msg);
   };
 
   const triggerSubmit = async () => {
@@ -87,11 +81,10 @@ export default function DreamForm() {
   };
 
   return (
-    <div className="relative z-10 flex flex-col items-center min-h-screen px-6 py-20 overflow-y-auto">
-      {/* 로봇의 머리 위(상단)로 배치하기 위해 mt를 대폭 줄임 */}
+    <div className="relative z-10 flex flex-col items-center min-h-screen px-6 py-20 overflow-y-auto overflow-x-hidden">
       <div className="w-full max-w-sm flex flex-col gap-16 mt-[12vh]">
         
-        {/* 1. 입력 섹션 */}
+        {/* 입력 섹션 */}
         <motion.div
           layout
           initial={{ opacity: 0, y: -20 }}
@@ -105,13 +98,13 @@ export default function DreamForm() {
             <p className="text-[10px] text-white/40 tracking-[0.2em] uppercase font-light">Ethereal Dream Oracle</p>
           </div>
 
-          <div className="relative glass-minimal flex flex-col bg-white/[0.04] backdrop-blur-[40px] border border-white/10 rounded-2xl px-6 py-5 group hover:border-white/20 transition-all duration-1000 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+          <div className="relative glass-minimal flex flex-col bg-white/[0.04] backdrop-blur-[40px] border border-white/10 rounded-2xl px-6 py-5 group hover:border-white/20 transition-all duration-1000">
             {loading && (
               <motion.div 
                 initial={{ x: '-100%' }}
                 animate={{ x: '100%' }}
                 transition={{ repeat: Infinity, duration: 2, ease: "linear" }}
-                className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-purple-400/80 to-transparent"
+                className="absolute top-0 left-0 w-full h-[1px] bg-white/20"
               />
             )}
 
@@ -157,7 +150,7 @@ export default function DreamForm() {
           </div>
         </motion.div>
 
-        {/* 2. 결과 섹션 */}
+        {/* 결과 섹션 */}
         <AnimatePresence mode="wait">
           {result && (
             <motion.div
@@ -174,7 +167,7 @@ export default function DreamForm() {
                 </p>
               </div>
 
-              <div className="glass-minimal p-10 rounded-[4rem] border border-white/10 bg-black/60 backdrop-blur-[60px] space-y-12 shadow-[0_0_100px_-20px_rgba(168,85,247,0.3)] relative group/card">
+              <div className="glass-minimal p-10 rounded-[4rem] border border-white/10 bg-black/60 backdrop-blur-[60px] space-y-12 shadow-2xl relative">
                 
                 <section className="space-y-5">
                   <div className="flex items-center gap-2 text-purple-300 uppercase tracking-[0.4em] text-[10px] font-bold">
@@ -220,7 +213,7 @@ export default function DreamForm() {
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.1 * idx }}
-                        className="w-10 h-10 rounded-full bg-white/[0.03] border border-white/10 flex items-center justify-center text-sm font-medium text-white/90 shadow-[0_0_15px_rgba(255,255,255,0.05)]"
+                        className="w-10 h-10 rounded-full bg-white/[0.05] border border-white/10 flex items-center justify-center text-sm font-medium text-white/90"
                       >
                         {num}
                       </motion.div>
@@ -228,18 +221,11 @@ export default function DreamForm() {
                   </div>
                 </div>
 
-                {/* 복사 및 재시작 버튼 */}
-                <div className="flex flex-col gap-4 pt-4">
-                  <button
-                    onClick={handleCopyResult}
-                    className="flex items-center justify-center gap-3 py-4 bg-white/5 hover:bg-white/10 rounded-2xl text-[10px] tracking-[0.2em] text-white/70 hover:text-white/100 transition-all duration-500 font-['Malgun_Gothic'] group"
-                  >
-                    <Share2 className="w-3.5 h-3.5" />
-                    결과 복사하기
-                  </button>
+                {/* 하단 버튼: 극도로 미니멀하게 변경 (그라데이션 제거) */}
+                <div className="flex flex-col gap-6 pt-4 items-center">
                   <button
                     onClick={handleReset}
-                    className="flex items-center justify-center gap-3 py-4 text-[9px] tracking-[0.5em] text-white/20 hover:text-white/50 uppercase transition-all duration-1000 font-['Malgun_Gothic']"
+                    className="text-[10px] tracking-[0.5em] text-white/20 hover:text-white/80 uppercase transition-all duration-1000 font-['Malgun_Gothic'] flex items-center gap-2"
                   >
                     <RotateCcw className="w-3 h-3" />
                     새로운 꿈 해석하기
@@ -257,7 +243,7 @@ export default function DreamForm() {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
-              className="p-8 glass-minimal bg-red-500/10 border-red-500/20 rounded-3xl space-y-6 shadow-2xl"
+              className="p-8 glass-minimal bg-red-500/5 border-red-500/10 rounded-3xl space-y-6 shadow-2xl"
             >
               <div className="flex items-center justify-between border-b border-white/5 pb-4">
                 <div className="flex items-center gap-2 text-red-400 text-[10px] font-bold font-['Malgun_Gothic'] uppercase tracking-widest">
@@ -268,14 +254,13 @@ export default function DreamForm() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <p className="text-white/80 text-[11px] leading-relaxed font-mono select-all bg-black/40 p-4 rounded-xl border border-white/5">
+              <p className="text-white/60 text-[11px] leading-relaxed font-mono select-all p-4">
                 {errorMessage}
               </p>
               <button
                 onClick={() => copyToClipboard(errorMessage, '에러 내용이 복사되었습니다.')}
-                className="w-full py-3 bg-white/5 hover:bg-white/10 text-white/60 text-[10px] rounded-xl transition-all flex items-center justify-center gap-2 uppercase tracking-[0.2em] font-['Malgun_Gothic']"
+                className="w-full py-2 text-white/20 hover:text-white/60 text-[10px] uppercase tracking-widest font-['Malgun_Gothic'] border border-white/5 rounded-xl transition-all"
               >
-                <Copy className="w-3.5 h-3.5" />
                 Error Copy
               </button>
             </motion.div>
