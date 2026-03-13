@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect, KeyboardEvent } from 'react';
+import { useState, useRef, useEffect, KeyboardEvent, ChangeEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, Moon, Sun, AlertCircle, TrendingUp, RefreshCcw } from 'lucide-react';
 
@@ -22,6 +22,20 @@ export default function DreamForm() {
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState(false);
   const resultRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+
+  // 자동 높이 조절 로직
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto';
+      textarea.style.height = `${textarea.scrollHeight}px`;
+    }
+  };
+
+  useEffect(() => {
+    adjustHeight();
+  }, [dream]);
 
   // 결과 생성 시 해당 영역으로 부드럽게 스크롤
   useEffect(() => {
@@ -51,58 +65,56 @@ export default function DreamForm() {
     }
   };
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSubmit();
-    }
+  // 사용자의 요청대로 엔터 제출 기능 제거 (일반적인 텍스트 입력으로 변경)
+  const handleTextAreaChange = (e: ChangeEvent<HTMLTextAreaElement>) => {
+    setDream(e.target.value);
   };
 
   return (
     <div className="relative z-10 w-full flex flex-col items-center">
       
-      {/* 1. 입력창 섹션 (로봇 하단 상자 위치에 맞게 조정) */}
-      <div className={`w-full px-4 transition-all duration-1000 ${result ? 'mt-[15vh]' : 'mt-[58vh]'}`}>
+      {/* 1. 컴팩트한 지능형 입력창 섹션 */}
+      <div className={`w-full px-4 transition-all duration-1000 ${result ? 'mt-[10vh]' : 'mt-[62vh]'}`}>
         <motion.div 
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-3xl mx-auto"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="w-full max-w-2xl mx-auto"
         >
           <form onSubmit={handleSubmit} className="relative group">
-            {/* 후광 효과 */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-600/30 to-indigo-600/30 rounded-3xl blur-2xl opacity-40 group-hover:opacity-100 transition duration-1000"></div>
+            {/* 은은한 보라빛 후광 */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-2xl blur-xl opacity-20 group-hover:opacity-60 transition duration-1000"></div>
             
-            <div className="relative bg-[#0d0d12]/60 backdrop-blur-3xl border border-white/10 p-8 rounded-3xl flex flex-col gap-6 shadow-2xl ring-1 ring-white/5">
-              <label className="text-purple-300/40 text-[10px] font-bold tracking-[0.6em] uppercase flex items-center gap-3">
-                <Moon size={14} className="text-purple-400" /> 
-                Tell me your dream
+            <div className="relative bg-[#0d0d12]/40 backdrop-blur-2xl border border-white/5 p-4 rounded-2xl flex flex-col gap-3 shadow-2xl ring-1 ring-white/5 transition-all">
+              <label className="text-purple-300/30 text-[9px] font-bold tracking-[0.5em] uppercase flex items-center gap-2 ml-1">
+                <Moon size={10} className="text-purple-400/50" /> 
+                Dream Whisper
               </label>
               
               <textarea
+                ref={textareaRef}
                 value={dream}
-                onChange={(e) => setDream(e.target.value)}
-                onKeyDown={handleKeyDown}
-                placeholder="어젯밤의 꿈을 들려주세요 (Enter로 전송)"
-                className="w-full bg-transparent border-none p-0 text-white placeholder:text-white/10 focus:outline-none min-h-[120px] max-h-[150px] resize-none text-2xl leading-relaxed font-serif"
+                onChange={handleTextAreaChange}
+                placeholder="꿈의 조각을 남겨주세요..."
+                className="w-full bg-transparent border-none p-1 text-white placeholder:text-white/10 focus:outline-none min-h-[44px] max-h-[300px] resize-none text-lg leading-relaxed font-serif transition-all overflow-hidden"
                 disabled={loading}
+                rows={1}
               />
               
-              <div className="flex justify-between items-center pt-6 border-t border-white/5">
-                <div className="text-[10px] text-white/20 italic font-serif">Shift + Enter for new line</div>
+              <div className="flex justify-end pt-2 border-t border-white/5">
                 <button
                   type="submit"
                   disabled={loading || !dream.trim()}
-                  className="bg-white/5 hover:bg-white/10 text-white/80 hover:text-white px-10 py-4 rounded-full border border-white/10 transition-all active:scale-[0.98] disabled:opacity-30 flex items-center gap-4 text-sm font-semibold group/btn"
+                  className="bg-white/5 hover:bg-white/10 text-white/60 hover:text-white px-6 py-2 rounded-xl border border-white/10 transition-all active:scale-[0.98] disabled:opacity-20 flex items-center gap-3 text-xs font-semibold group/btn"
                 >
                   {loading ? (
                     <>
-                      <RefreshCcw className="animate-spin" size={18} />
-                      별의 조각을 모으는 중...
+                      <RefreshCcw className="animate-spin" size={14} />
+                      수집 중...
                     </>
                   ) : (
                     <>
-                      <Sparkles size={18} className="group-hover/btn:rotate-12 transition-transform" />
-                      해석 시작
+                      <Sparkles size={14} className="group-hover/btn:rotate-12 transition-transform" />
+                      해석 요청
                     </>
                   )}
                 </button>
@@ -112,7 +124,7 @@ export default function DreamForm() {
         </motion.div>
       </div>
 
-      {/* 2. 결과 섹션 (입력창 하단에 자연스럽게 배치) */}
+      {/* 2. 결과 섹션 (자연스럽게 이어짐) */}
       <AnimatePresence>
         {result && (
           <motion.div
@@ -122,16 +134,16 @@ export default function DreamForm() {
             exit={{ opacity: 0 }}
             className="w-full max-w-4xl px-4 mt-20 pb-40"
           >
-            <div className="bg-[#050508]/80 backdrop-blur-3xl border border-white/10 rounded-[40px] p-1 shadow-2xl overflow-hidden max-h-[75vh] flex flex-col">
+            <div className="bg-[#050508]/60 backdrop-blur-3xl border border-white/10 rounded-[40px] p-1 shadow-2xl overflow-hidden max-h-[75vh] flex flex-col">
               
               <div className="overflow-y-auto p-12 space-y-16 custom-scrollbar">
                 
                 {/* 30년 경력 마스터의 통찰 */}
                 <section className="relative">
-                  <div className="text-[10px] text-purple-400/40 tracking-[0.5em] mb-6 uppercase flex items-center gap-2">
+                  <div className="text-[10px] text-purple-400/40 tracking-[0.5em] mb-6 uppercase flex items-center gap-2 font-bold">
                     <Sun size={14} /> Master's Insight
                   </div>
-                  <p className="text-3xl text-white font-serif leading-[1.6] italic tracking-tight">
+                  <p className="text-2xl text-white font-serif leading-[1.8] italic tracking-tight opacity-90">
                     "{result.meaning}"
                   </p>
                 </section>
@@ -139,12 +151,12 @@ export default function DreamForm() {
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 border-t border-white/5 pt-16">
                   {/* 운명의 경고 */}
                   <section className="space-y-6">
-                    <h4 className="text-[10px] font-bold text-red-400/50 tracking-[0.3em] uppercase flex items-center gap-2">
+                    <h4 className="text-[10px] font-bold text-red-400/40 tracking-[0.3em] uppercase flex items-center gap-2">
                       <AlertCircle size={14} /> The Caution
                     </h4>
                     <div className="space-y-8">
-                      <p className="text-red-100 font-bold text-xl leading-snug">{result.caution.summary}</p>
-                      <p className="text-white/50 leading-[2.0] text-lg whitespace-pre-wrap font-serif italic">
+                      <p className="text-red-100 font-bold text-lg leading-snug">{result.caution.summary}</p>
+                      <p className="text-white/40 leading-[2.2] text-md whitespace-pre-wrap font-serif italic">
                         {result.caution.story}
                       </p>
                     </div>
@@ -152,21 +164,21 @@ export default function DreamForm() {
 
                   {/* 하늘의 길조 */}
                   <section className="space-y-6">
-                    <h4 className="text-[10px] font-bold text-emerald-400/50 tracking-[0.3em] uppercase flex items-center gap-2">
+                    <h4 className="text-[10px] font-bold text-emerald-400/40 tracking-[0.3em] uppercase flex items-center gap-2">
                       <TrendingUp size={14} /> The Good Omen
                     </h4>
                     <div className="space-y-8">
-                      <p className="text-emerald-100 font-bold text-xl leading-snug">{result.goodOmen.summary}</p>
-                      <p className="text-white/50 leading-[2.0] text-lg whitespace-pre-wrap font-serif italic">
+                      <p className="text-emerald-100 font-bold text-lg leading-snug">{result.goodOmen.summary}</p>
+                      <p className="text-white/40 leading-[2.2] text-md whitespace-pre-wrap font-serif italic">
                         {result.goodOmen.story}
                       </p>
                     </div>
                   </section>
                 </div>
 
-                {/* 행운의 숫자 (신비로운 배치) */}
+                {/* 행운의 숫자 */}
                 <section className="flex flex-col items-center pt-12 border-t border-white/5">
-                  <span className="text-white/10 text-[10px] font-bold tracking-[0.8em] mb-12 uppercase">Destiny Numbers</span>
+                  <span className="text-white/10 text-[10px] font-bold tracking-[0.8em] mb-12 uppercase italic">Destiny Numbers</span>
                   <div className="flex gap-6 flex-wrap justify-center">
                     {result.luckyNumbers.map((num, i) => (
                       <motion.div
@@ -174,7 +186,7 @@ export default function DreamForm() {
                         initial={{ scale: 0, y: 20 }}
                         animate={{ scale: 1, y: 0 }}
                         transition={{ delay: i * 0.1, type: "spring", stiffness: 100 }}
-                        className="w-16 h-16 rounded-full border border-white/10 flex items-center justify-center text-2xl font-serif text-white/90 bg-white/5 backdrop-blur-sm shadow-xl"
+                        className="w-14 h-14 rounded-full border border-white/10 flex items-center justify-center text-xl font-serif text-white/80 bg-white/5 backdrop-blur-sm shadow-xl"
                       >
                         {num}
                       </motion.div>
@@ -189,13 +201,13 @@ export default function DreamForm() {
 
       <style jsx global>{`
         .custom-scrollbar::-webkit-scrollbar {
-          width: 3px;
+          width: 2px;
         }
         .custom-scrollbar::-webkit-scrollbar-track {
           background: transparent;
         }
         .custom-scrollbar::-webkit-scrollbar-thumb {
-          background: rgba(255, 255, 255, 0.03);
+          background: rgba(255, 255, 255, 0.05);
         }
         .custom-scrollbar::-webkit-scrollbar-thumb:hover {
           background: rgba(255, 255, 255, 0.1);
