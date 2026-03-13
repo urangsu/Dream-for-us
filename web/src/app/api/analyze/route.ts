@@ -11,12 +11,12 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: '꿈 내용을 입력해주세요.' }, { status: 400 });
     }
 
-    const modelsToTry = ["gemini-1.5-flash", "gemini-1.5-pro"];
+    const modelsToTry = ["models/gemini-1.5-flash", "models/gemini-1.5-pro", "gemini-1.5-flash"];
     let lastError = null;
 
     for (const modelName of modelsToTry) {
       try {
-        console.log(`${modelName} 시도 중...`);
+        console.log(`[API] ${modelName} 시도 중...`);
         const model = genAI.getGenerativeModel({ model: modelName });
         
         const prompt = `
