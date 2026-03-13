@@ -1,56 +1,69 @@
 import { NextResponse } from 'next/server';
 import { GoogleGenerativeAI } from "@google/generative-ai";
 
-// Google Generative AI 설정 (Gemini)
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GENERATIVE_AI_API_KEY || "");
+
+let lastRequestTime = 0;
+const MIN_REQUEST_GAP = 1500; 
 
 export async function POST(req: Request) {
   try {
+    const now = Date.now();
+    if (now - lastRequestTime < MIN_REQUEST_GAP) {
+      return NextResponse.json({ error: '천천히 시도해주세요.' }, { status: 429 });
+    }
+    lastRequestTime = now;
+
     const { dream } = await req.json();
 
     if (!dream) {
-      return NextResponse.json({ error: '꿈 내용을 입력해주세요.' }, { status: 400 });
+      return NextResponse.json({ error: '내용이 없습니다.' }, { status: 400 });
     }
 
-    if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-      return NextResponse.json({ 
-        meaning: "API 키가 설정되지 않아 테스트 응답을 보냅니다: 이 꿈은 새로운 변화의 시작을 의미합니다.",
-        caution: "현재 상황에서 서두르지 말고 주변을 잘 살피세요.",
-        goodOmen: "곧 당신에게 기분 좋은 소식이 찾아올 것입니다."
-      });
-    }
-
-    // Gemini 모델 가져오기 (1.5 Flash가 빠르고 효율적임)
+    // 가장 안정적인 gemini-1.5-flash 또는 최신 2.0-flash-exp 시도
     const model = genAI.getGenerativeModel({ 
-      model: "gemini-1.5-flash",
+      model: "gemini-1.5-flash", // 2.0 모델명 오류 가능성을 대비해 가장 안정적인 버전으로 우선 설정
       generationConfig: {
-        responseMimeType: "application/json",
+        maxOutputTokens: 400,
+        temperature: 0.7,
       }
     });
 
     const prompt = `
-      너는 신비롭고 깊이 있는 통찰력을 가진 꿈 해석 전문가이자 조언가야. 
-      사용자가 꾼 꿈 내용을 듣고, 다음 세 가지 섹션으로 분석해서 JSON 형식으로 답변해줘:
-      
+      꿈 해석 전문가로서 사용자의 꿈을 분석해줘. 
+      결과는 반드시 아래의 JSON 형식만 출력하고, 다른 설명은 하지마. 
+      토큰을 아끼기 위해 답변은 짧고 강렬하게 요약해줘.
+
       {
-        "meaning": "꿈이 상징하는 핵심 의미 (신비롭고 따뜻한 한국어 톤)",
-        "caution": "일상에서 조심해야 할 점이나 주의사항",
-        "goodOmen": "기대할 수 있는 긍정적인 변화나 행운의 징조"
+        "meaning": "핵심 의미 (1~2문장)",
+        "caution": "주의점 (한 줄)",
+        "goodOmen": "행운의 징조 (한 줄)"
       }
 
       꿈 내용: "${dream}"
-      
-      반드시 한국어로 답변하고, 사용자에게 친근하면서도 깊은 울림을 주는 문체를 사용해줘.
     `;
 
     const result = await model.generateContent(prompt);
     const response = await result.response;
-    const text = response.text();
+    let text = response.text();
     
-    return NextResponse.json(JSON.parse(text));
+    // 제미나이가 가끔 보내는 ```json ... ``` 마크다운 태그 제거 로직
+    text = text.replace(/```json/g, '').replace(/```/g, '').trim();
+    
+    try {
+      const parsedData = JSON.parse(text);
+      return NextResponse.json(parsedData);
+    } catch (parseError) {
+      console.error("JSON Parse Error:", text);
+      return NextResponse.json({ 
+        meaning: "무의식이 복잡하게 얽혀있네요. 다시 한 번 들려주시겠어요?",
+        caution: "생각을 정리할 시간이 필요합니다.",
+        goodOmen: "곧 명확한 답을 얻게 될 것입니다."
+      });
+    }
 
-  } catch (error) {
-    console.error('Gemini Error:', error);
-    return NextResponse.json({ error: '꿈을 분석하는 중 오류가 발생했습니다.' }, { status: 500 });
+  } catch (error: any) {
+    console.error('Gemini API Error:', error);
+    return NextResponse.json({ error: error.message || '분석 중 오류 발생' }, { status: 500 });
   }
 }
